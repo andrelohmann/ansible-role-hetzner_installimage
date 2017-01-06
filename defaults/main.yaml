@@ -1,0 +1,16 @@
+---
+# installimage parameters
+hetzner_installimage_install_drives:
+- DRIVE1 /dev/sda
+- DRIVE2 /dev/sdb
+hetzner_installimage_install_raid:
+- SWRAID 1
+- SWRAIDLEVEL 1
+hetzner_installimage_install_bootloader: grub
+hetzner_installimage_install_hostname: "{{ inventory_hostname }}"
+hetzner_installimage_install_partitions:
+- PART swap swap 32G
+- PART /boot ext4 1G
+- PART / ext4 all
+hetzner_installimage_install_image: /root/.oldroot/nfs/images/Debian-86-jessie-64-minimal.tar.gz
+...

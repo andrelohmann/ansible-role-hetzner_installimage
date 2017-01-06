@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: andrelohmann
+  description: ansible galaxy role to talk to the hetzner.de api to provision your boxes with installimage but through ansible
+  company: smartformer UG
+
+  license: MIT
+
+  min_ansible_version: 2.2
+
+  galaxy_tags:
+  - hetzner
+  - installimage
+
+dependencies: []
+...

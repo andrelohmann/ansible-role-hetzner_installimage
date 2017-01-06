@@ -1,0 +1,16 @@
+{% for drive in hetzner_installimage_install_drives %}
+{{ drive }}
+{% endfor %}
+
+{% for raid in hetzner_installimage_install_raid %}
+{{ raid }}
+{% endfor %}
+
+BOOTLOADER {{ hetzner_installimage_install_bootloader }}
+HOSTNAME {{ hetzner_installimage_install_hostname }}
+
+{% for partition in hetzner_installimage_install_partitions %}
+{{ partition }}
+{% endfor %}
+
+IMAGE {{ hetzner_installimage_install_image }}
