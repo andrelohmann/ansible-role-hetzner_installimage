@@ -22,7 +22,10 @@
   ignore_errors: true
 
 - name: remove server from local known_hosts file
-  local_action: command  /usr/bin/ssh-keygen -R {{ inventory_hostname }}
+  local_action: shell ssh-keygen -R {{ ansible_host }}
+
+- name: pause a bit for the reboot to kick in
+  pause: seconds=30
 
 - name: waiting for server to come back
   local_action: wait_for
