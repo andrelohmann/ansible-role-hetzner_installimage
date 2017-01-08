@@ -1,4 +1,4 @@
-hetzner-installimage
+hetzner_installimage
 ====================
 
 Use this role to base provision your hetzner machines with the hetzner installimage script and your public ssh key (but all automated through ansible).
@@ -42,7 +42,7 @@ Including an example of how to use your role (for instance, with variables passe
 
     - hosts: hetzner
       roles:
-         - { role: andrelohmann.ansible-role-hetzner-installimage }
+         - { role: andrelohmann.ansible-role-hetzner_installimage }
 
 License
 -------
