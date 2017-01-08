@@ -1,6 +1,8 @@
 hetzner_installimage
 ====================
 
+[![Build Status](https://travis-ci.org/andrelohmann/ansible-role-hetzner_installimage.svg?branch=master)](https://travis-ci.org/andrelohmann/ansible-role-hetzner_installimage)
+
 Use this role to base provision your hetzner machines with the hetzner installimage script and your public ssh key (but all automated through ansible).
 
 Requirements
