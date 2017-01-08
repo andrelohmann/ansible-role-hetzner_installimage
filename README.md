@@ -42,7 +42,7 @@ Including an example of how to use your role (for instance, with variables passe
 
     - hosts: hetzner
       roles:
-         - { role: andrelohmann.ansible-role-hetzner-installimage, x: 42 }
+         - { role: andrelohmann.ansible-role-hetzner-installimage }
 
 License
 -------
