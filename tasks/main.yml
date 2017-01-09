@@ -11,11 +11,11 @@
   register: rescue
 
 - name: include rescue mode
-  include: rescuemode.yaml
+  include: rescuemode.yml
   when: rescue.json.rescue.active == false
 
 - name: include installimage
-  include: installimage.yaml
+  include: installimage.yml
   when: rescue.json.rescue.active == false
 
 ...
