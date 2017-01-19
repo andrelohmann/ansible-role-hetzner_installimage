@@ -1,14 +1,21 @@
 ---
 
-- name: ping the host
-  ping:
-  register: pong
+- name: key file
+  debug:
+    msg: "ssh root@{{ansible_host}} -i {{ ansible_ssh_private_key_file }}"
+
+- name: Wait till MCP enters the running phase
+  local_action: command ssh root@{{ansible_host}} -i {{ ansible_ssh_private_key_file }} tmsh -q -a show sys mcp
+  changed_when: False
+  register: mcp_wait
+  until: mcp_wait.stdout.find("running") != -1
+  retries: 300
   failed_when: ""
   ignore_errors: true
 
-- name: debug pong
+- name: debug mcp_wait
   debug:
-    msg: "{{ pong }}"
+    msg: "{{ mcp_wait }}"
 
 #- name: check the current rescue mode state
 #  local_action: uri
@@ -19,11 +26,11 @@
 #    force_basic_auth=yes
 #    status_code=200
 #  register: rescue
-#
+
 #- name: include rescue mode
 #  include: rescuemode.yml
 #  when: rescue.json.rescue.active == false
-#
+
 #- name: include installimage
 #  include: installimage.yml
 #  when: rescue.json.rescue.active == false
