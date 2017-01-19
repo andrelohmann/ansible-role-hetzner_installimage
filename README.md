@@ -10,6 +10,23 @@ Requirements
 
 This role requires you to have a server at hetzner.de and some api credentials as well as your provisioning key uploaded to the hetzner robot. Read more about that under https://wiki.hetzner.de/index.php/Robot_Webservice
 
+Config Variables
+---------------
+
+The following variables are suggested to be set within you ansible.cfg file
+
+    [defaults]
+    inventory = __YOUR_INVENTORY__
+    forks = 1
+    host_key_checking = false
+    private_key_file = __YOUR_HETZNER_PROVISIONING_KEY__
+    remote_user = root
+    roles_path = __PATH_TO_YOUR_GALAXY_ROLES__
+    [ssh_connection]
+    pipelining = True
+    scp_if_ssh = True
+    control_path = %(directory)s/%%h-%%r
+
 Role Variables
 --------------
 

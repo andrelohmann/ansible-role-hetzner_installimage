@@ -5,13 +5,13 @@
     msg: "ssh root@{{ansible_host}} -i {{ ansible_ssh_private_key_file }}"
 
 - name: Wait till MCP enters the running phase
-  local_action: command ssh root@{{ansible_host}} -i {{ ansible_ssh_private_key_file }} tmsh -q -a show sys mcp
+  local_action: command ssh -oBatchMode=yes root@{{ansible_host}} tmsh -q -a show sys mcp
   changed_when: False
   register: mcp_wait
-  until: mcp_wait.stdout.find("running") != -1
-  retries: 300
-  failed_when: ""
-  ignore_errors: true
+#  until: mcp_wait.stdout.find("running") != -1
+#  retries: 300
+#  failed_when: ""
+#  ignore_errors: true
 
 - name: debug mcp_wait
   debug:
