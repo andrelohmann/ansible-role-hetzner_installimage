@@ -25,7 +25,7 @@
   local_action: shell ssh-keygen -R {{ ansible_host }}
 
 - name: pause a bit for the reboot to kick in
-  pause: seconds=30
+  pause: seconds=60
 
 - name: waiting for server to come back
   local_action: wait_for
@@ -33,5 +33,10 @@
     port=22
     delay=1
     timeout=180
+
+- name: create hostcode
+  copy:
+    content: "{{ ansible_host | md5 }}"
+    dest: /etc/hostcode
 
 ...

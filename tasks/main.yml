@@ -1,5 +1,39 @@
 ---
 
+#- name: connect through ssh from local
+#  local_action: command ssh -oBatchMode=yes root@{{ansible_host}} who
+#  changed_when: False
+#  register: who
+
+#- name: check hostcode
+#  slurp:
+#    src: /etc/hostcode
+#  register: hostcode
+#  when: not hetzner_installimage_ignore_hostcode == 'yes'
+#  ignore_errors: trues
+
+#- debug:
+#  msg: "{{ hostcode['content'] | b64decode }}"
+
+- name: check existence of /etc/hostcode
+  stat:
+    path: /etc/hostcode
+  register: hetzner_installimage_hostcode
+  when: not hetzner_installimage_ignore_hostcode == True
+
+- name:
+  set_fact: hetzner_installimage_run=False
+  when: hetzner_installimage_hostcode is defined and hetzner_installimage_hostcode.stat.exists == True and not hetzner_installimage_ignore_hostcode == True
+
+- name:
+  set_fact: hetzner_installimage_run=True
+  when: hetzner_installimage_ignore_hostcode == True or (hetzner_installimage_hostcode is defined and hetzner_installimage_hostcode.stat.exists == False)
+
+- name: fail tasks if hetzner_installimage run == False
+  fail:
+    msg: "File /etc/hostcode exists on host {{ansible_host}}"
+  when: not hetzner_installimage_run
+
 - name: check the current rescue mode state
   local_action: uri
     url=https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue
@@ -8,14 +42,15 @@
     password={{ hetzner_installimage_webservice_password }}
     force_basic_auth=yes
     status_code=200
-  register: rescue
+  register: hetzner_installimage_rescue
+  when: hetzner_installimage_run
 
 - name: include rescue mode
   include: rescuemode.yml
-  when: rescue.json.rescue.active == false
+  when: hetzner_installimage_run and hetzner_installimage_rescue.json.rescue.active == false and not ansible_check_mode
 
 - name: include installimage
   include: installimage.yml
-  when: rescue.json.rescue.active == false
+  when: hetzner_installimage_run and hetzner_installimage_rescue.json.rescue.active == false and not ansible_check_mode
 
 ...

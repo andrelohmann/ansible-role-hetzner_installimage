@@ -10,6 +10,25 @@ Requirements
 
 This role requires you to have a server at hetzner.de and some api credentials as well as your provisioning key uploaded to the hetzner robot. Read more about that under https://wiki.hetzner.de/index.php/Robot_Webservice
 
+Also for security reasons, the role will not reboot and install the machine, if it can't access it and check for the existance of a hostcode file. Therefor you need to have your provisioning key allready installed on the machine(s) you want to install (can be done through robot).
+
+Config Variables
+---------------
+
+The following variables are suggested to be set within you ansible.cfg file
+
+    [defaults]
+    inventory = __YOUR_INVENTORY__
+    forks = 1
+    host_key_checking = false
+    private_key_file = __YOUR_HETZNER_PROVISIONING_KEY__
+    remote_user = root
+    roles_path = __PATH_TO_YOUR_GALAXY_ROLES__
+    [ssh_connection]
+    pipelining = True
+    scp_if_ssh = True
+    control_path = %(directory)s/%%h-%%r
+
 Role Variables
 --------------
 
@@ -45,6 +64,29 @@ Including an example of how to use your role (for instance, with variables passe
     - hosts: hetzner
       roles:
          - { role: andrelohmann.ansible-role-hetzner_installimage }
+
+Installation Steps
+------------------
+
+  * Install a new machine
+    1. Enter your hetzner robot (robot.your-server.de)
+    2. Order a new server
+    3. Select your operating system
+    4. Select your provisioning key
+    5. Run the hetzner_installimge role
+  * Install an existing machine
+    1. Enter your hetzner robot (robot.your-server.de)
+    2. Select the machine
+    3. Select "Linux"
+    4. Select your provisioning key
+    5. Reset the machine
+    6. Run the hetzner_installimge role
+  * Install an allready provisioned machine
+    1. Enter the machine
+    2. Delete /etc/hostcode
+    3. Run the hetzner_installimge role
+
+If you are sure, you will not accidentally purge a running machine, allready in use, you can directly run the role with the extra variable **--extra-vars "{ hetzner_installimage_ignore_hostcode: True }"**. This way the role will not check the machine for an existing /etc/hostcode file but will also not prevent the machine from being purged accidentally!
 
 License
 -------
