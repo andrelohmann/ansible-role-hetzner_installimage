@@ -13,4 +13,6 @@ hetzner_installimage_install_partitions:
 - PART /boot ext4 1G
 - PART / ext4 all
 hetzner_installimage_install_image: /root/.oldroot/nfs/images/Debian-86-jessie-64-minimal.tar.gz
+# prevent reinstallation of running servers with /etc/hostcode file
+hetzner_installimage_ignore_hostcode: False
 ...
