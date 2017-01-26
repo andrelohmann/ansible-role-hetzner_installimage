@@ -29,7 +29,7 @@
 
 - name: waiting for server to come back
   local_action: wait_for
-    host={{ inventory_hostname }}
+    host={{ ansible_host }}
     port=22
     delay=1
     timeout=180
