@@ -54,6 +54,10 @@ The following mandatory variables need to be set in group_vars/host_vars to allo
     hetzner_installimage_webservice_password: password
     hetzner_installimage_key_fingerprint: 00:11:22:33:44:55:66:77:88:99:aa:bb:cc:dd:ee:ff
 
+The following variable can be set optionally, to set the hostname within the hetzner robot
+
+    hetzner_server_name: __YOUR_SERVER_NAME__
+
 
 
 Example Playbook
