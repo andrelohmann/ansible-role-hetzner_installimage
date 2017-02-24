@@ -15,7 +15,7 @@ Also for security reasons, the role will not reboot and install the machine, if 
 Config Variables
 ---------------
 
-The following variables are suggested to be set within you ansible.cfg file
+The following variables are suggested to be set within your ansible.cfg file
 
     [defaults]
     inventory = __YOUR_INVENTORY__
@@ -41,12 +41,12 @@ The default set of variables defines the installimage and needs at best to be ov
     - SWRAID 1
     - SWRAIDLEVEL 1
     hetzner_installimage_install_bootloader: grub
-    hetzner_installimage_install_hostname: Debian-86-jessie-64-minimal
+    hetzner_installimage_install_hostname: Debian-87-jessie-64-minimal
     hetzner_installimage_install_partitions:
     - PART swap swap 32G
     - PART /boot ext4 1G
     - PART / ext4 all
-    hetzner_installimage_install_image: /root/.oldroot/nfs/images/Debian-86-jessie-64-minimal.tar.gz
+    hetzner_installimage_install_image: /root/.oldroot/nfs/images/Debian-87-jessie-64-minimal.tar.gz
 
 The following mandatory variables need to be set in group_vars/host_vars to allow communication with the webservice and deployment of the public key
 
@@ -62,8 +62,6 @@ The following variable can be set optionally, to set the hostname within the het
 
 Example Playbook
 ----------------
-
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
     - hosts: hetzner
       roles:
