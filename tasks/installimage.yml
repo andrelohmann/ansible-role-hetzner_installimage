@@ -37,7 +37,7 @@
 - name: create hostcode
   copy:
     content: "{{ ansible_host | md5 }}"
-    dest: /etc/hostcode
+    dest: "/etc/hostcode"
 
 - name: set the server_name
   local_action: uri
