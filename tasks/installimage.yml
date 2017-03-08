@@ -34,10 +34,23 @@
     delay=1
     timeout=180
 
-- name: create hostcode
-  copy:
-    content: "{{ ansible_host | md5 }}"
-    dest: "/etc/hostcode"
+- name: update apt
+  raw: apt-get update
+
+- name: install python on remote host
+  raw: apt-get install python -y
+
+- name: generate hostcode
+  set_fact:
+    _hostcode: "{{ ansible_host | md5 }}"
+
+- name: create hostcode file
+  template:
+    src: hostcode.j2
+    dest: /etc/hostcode
+    owner: root
+    group: root
+    mode: 0644
 
 - name: set the server_name
   local_action: uri
