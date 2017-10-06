@@ -67,7 +67,7 @@ Example Playbook
 
     - hosts: hetzner
       roles:
-         - { role: andrelohmann.ansible-role-hetzner_installimage }
+         - { role: andrelohmann.hetzner_installimage }
 
 Installation Steps
 ------------------
