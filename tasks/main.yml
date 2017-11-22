@@ -23,7 +23,7 @@
 
 - name:
   set_fact: hetzner_installimage_run=False
-  when: hetzner_installimage_hostcode is defined and hetzner_installimage_hostcode.stat.exists == True and not hetzner_installimage_ignore_hostcode == True
+  when: (hetzner_installimage_ignore_hostcode is not defined or not hetzner_installimage_ignore_hostcode == True) and (hetzner_installimage_hostcode is defined and hetzner_installimage_hostcode.stat.exists == True)
 
 - name:
   set_fact: hetzner_installimage_run=True
