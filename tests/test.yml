@@ -1,6 +1,7 @@
 ---
 - hosts: localhost
-  remote_user: root
+  become: true
+  become_method: sudo
   roles:
     - ansible-role-hetzner_installimage
 ...
