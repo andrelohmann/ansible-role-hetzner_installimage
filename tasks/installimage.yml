@@ -36,9 +36,10 @@
 
 - name: update apt
   raw: apt-get update
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - name: install python on remote host
-  raw: apt-get install python -y
+  package: python
 
 - name: generate hostcode
   set_fact:
