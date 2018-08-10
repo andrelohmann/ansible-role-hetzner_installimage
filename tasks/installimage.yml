@@ -34,6 +34,9 @@
     delay=1
     timeout=180
 
+- name: do facts module to get latest information
+  setup:
+
 - name: update apt
   raw: apt-get update
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
