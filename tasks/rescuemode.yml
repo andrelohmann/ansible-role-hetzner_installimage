@@ -27,6 +27,7 @@
 
 - name: remove server from local known_hosts file
   local_action: shell ssh-keygen -R {{ ansible_host }}
+  ignore_errors: true
 
 - name: pause a bit for the hardware reset to kick in
   pause: seconds=15
