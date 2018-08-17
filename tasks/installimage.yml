@@ -32,7 +32,7 @@
     host={{ ansible_host }}
     port=22
     delay=1
-    timeout=180
+    timeout={{ hetzner_installimage_after_reboot_timeout }}
 
 - name: do facts module to get latest information
   setup:
