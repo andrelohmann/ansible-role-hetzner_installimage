@@ -32,13 +32,17 @@
     host={{ ansible_host }}
     port=22
     delay=1
-    timeout=180
+    timeout={{ hetzner_installimage_after_reboot_timeout }}
+
+- name: do facts module to get latest information
+  setup:
 
 - name: update apt
   raw: apt-get update
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - name: install python on remote host
-  raw: apt-get install python -y
+  package: name=python state=present
 
 - name: generate hostcode
   set_fact:

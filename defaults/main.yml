@@ -15,4 +15,5 @@ hetzner_installimage_install_partitions:
 hetzner_installimage_install_image: /root/.oldroot/nfs/images/Debian-87-jessie-64-minimal.tar.gz
 # prevent reinstallation of running servers with /etc/hostcode file
 hetzner_installimage_ignore_hostcode: False
+hetzner_installimage_after_reboot_timeout: 180
 ...
