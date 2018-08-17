@@ -52,5 +52,6 @@
 - name: include installimage
   include: installimage.yml
   when: hetzner_installimage_run and hetzner_installimage_rescue.json.rescue.active == false and not ansible_check_mode
-
+  vars:
+    ansible_port: 22
 ...
