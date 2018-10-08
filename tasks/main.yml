@@ -35,13 +35,14 @@
   when: not hetzner_installimage_run
 
 - name: check the current rescue mode state
-  local_action: uri
-    url=https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue
-    method=GET
-    user={{ hetzner_installimage_webservice_username }}
-    password={{ hetzner_installimage_webservice_password }}
-    force_basic_auth=yes
-    status_code=200
+  local_action:
+    module: uri
+    url: "https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue"
+    method: GET
+    user: "{{ hetzner_installimage_webservice_username }}"
+    password: "{{ hetzner_installimage_webservice_password }}"
+    force_basic_auth: yes
+    status_code: 200
   register: hetzner_installimage_rescue
   when: hetzner_installimage_run
 

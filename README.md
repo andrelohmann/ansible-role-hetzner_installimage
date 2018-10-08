@@ -46,9 +46,7 @@ The default set of variables defines the installimage and needs at best to be ov
     - PART swap swap 32G
     - PART /boot ext4 1G
     - PART / ext4 all
-    hetzner_installimage_install_image: /root/.oldroot/nfs/images/Debian-87-jessie-64-minimal.tar.gz
-    #hetzner_installimage_install_image: /root/.oldroot/nfs/images/Ubuntu-1404-trusty-64-minimal.tar.gz
-    #hetzner_installimage_install_image: /root/.oldroot/nfs/images/Ubuntu-1604-xenial-64-minimal.tar.gz
+    hetzner_installimage_install_image: /root/.oldroot/nfs/images/Ubuntu-1604-xenial-64-minimal.tar.gz
 
 The following mandatory variables need to be set in group_vars/host_vars to allow communication with the webservice and deployment of the public key
 

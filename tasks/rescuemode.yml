@@ -2,27 +2,31 @@
 
 
 - name: activate rescue mode
-  local_action: uri
-    url=https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue
-    method=POST
-    user={{ hetzner_installimage_webservice_username }}
-    password={{ hetzner_installimage_webservice_password }}
-    force_basic_auth=yes
-    body="os=linux&arch=64&authorized_key={{ hetzner_installimage_key_fingerprint }}"
-    status_code=200
-    HEADER_Content-Type=application/x-www-form-urlencoded
+  local_action:
+    module: uri
+    url: "https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue"
+    method: POST
+    user: "{{ hetzner_installimage_webservice_username }}"
+    password: "{{ hetzner_installimage_webservice_password }}"
+    force_basic_auth: yes
+    body: "os=linux&arch=64&authorized_key={{ hetzner_installimage_key_fingerprint }}"
+    status_code: 200
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
   register: activated
 
 - name: Execute hardware reset
-  local_action: uri
-    url=https://robot-ws.your-server.de/reset/{{ ansible_host }}
-    method=POST
-    user={{ hetzner_installimage_webservice_username }}
-    password={{ hetzner_installimage_webservice_password }}
-    force_basic_auth=yes
-    body="type=hw"
-    status_code=200
-    HEADER_Content-Type=application/x-www-form-urlencoded
+  local_action:
+    module: uri
+    url: "https://robot-ws.your-server.de/reset/{{ ansible_host }}"
+    method: POST
+    user: "{{ hetzner_installimage_webservice_username }}"
+    password: "{{ hetzner_installimage_webservice_password }}"
+    force_basic_auth: yes
+    body: "type=hw"
+    status_code: 200
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
   register: reset
 
 - name: remove server from local known_hosts file
@@ -32,10 +36,11 @@
   pause: seconds=15
 
 - name: waiting for server to come back
-  local_action: wait_for
-    host={{ ansible_host }}
-    port=22
-    delay=1
-    timeout=180
+  local_action:
+    module: wait_for
+    host: "{{ ansible_host }}"
+    port: 22
+    delay: 1
+    timeout: 180
 
 ...
