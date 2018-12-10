@@ -16,23 +16,11 @@
   register: result
 
 - name: reboot server
-  command: reboot
-  async: 0
-  poll: 0
-  ignore_errors: true
+  reboot:
+    reboot_timeout: '{{ hetzner_installimage_after_reboot_timeout }}'
 
 - name: remove server from local known_hosts file
   local_action: shell ssh-keygen -R {{ ansible_host }}
-
-- name: pause a bit for the reboot to kick in
-  pause: seconds=60
-
-- name: waiting for server to come back
-  local_action: wait_for
-    host={{ ansible_host }}
-    port=22
-    delay=1
-    timeout={{ hetzner_installimage_after_reboot_timeout }}
 
 - name: do facts module to get latest information
   setup:
