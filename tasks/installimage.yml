@@ -15,11 +15,19 @@
   command: /root/.oldroot/nfs/install/installimage -K /root/tmpKey
   register: result
 
-- name: reboot server
-  command: reboot
-  async: 0
-  poll: 0
-  ignore_errors: true
+- name: do another hardware reset
+  local_action:
+    module: uri
+    url: "https://robot-ws.your-server.de/reset/{{ ansible_host }}"
+    method: POST
+    user: "{{ hetzner_installimage_webservice_username }}"
+    password: "{{ hetzner_installimage_webservice_password }}"
+    force_basic_auth: yes
+    body: "type=hw"
+    status_code: 200
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+  register: reset
 
 - name: remove server from local known_hosts file
   local_action: shell ssh-keygen -R {{ ansible_host }}
