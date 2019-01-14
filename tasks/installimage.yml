@@ -25,13 +25,6 @@
 - name: do facts module to get latest information
   setup:
 
-- name: update apt
-  raw: apt-get update
-  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
-
-- name: install python on remote host
-  package: name=python state=present
-
 - name: generate hostcode
   set_fact:
     _hostcode: "{{ ansible_host | md5 }}"
