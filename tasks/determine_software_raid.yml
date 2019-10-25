@@ -1,0 +1,58 @@
+---
+- name: automatically determine disk number
+  shell: lsblk | grep disk
+  register: disk_number
+
+- name: fail playbook if no disk was found using lsblk
+  fail:
+    msg: unsufficient number of disks detected
+  when: disk_number.stdout_lines|length < 1
+
+- name: fail playbook if more than 2 disks were found using lsblk
+  fail:
+    msg: unsufficient number of disks detected
+  when: disk_number.stdout_lines|length > 2
+
+- name: set software raid status for single disk
+  set_fact: 
+    sw_raid_status: 0
+    sw_raid_level: 0
+  when: disk_number.stdout_lines|length == 1
+
+- name: assume software raid level 1 for 2 disks
+  set_fact: 
+    sw_raid_status: 1
+    sw_raid_level: 1
+  when: disk_number.stdout_lines|length == 2
+
+- name: automatically determine first disk device
+  shell: lsblk | grep disk | head -1 | tail -1 | awk '{split($0, a, " "); print a[1]}'
+  register: first_disk_device
+
+- name: automatically determine second disk device for raid level 1
+  shell: lsblk | grep disk | head -2 | tail -1 | awk '{split($0, a, " "); print a[1]}'
+  register: second_disk_device
+  when: sw_raid_status == 1
+
+- name: set hetzner_installimage_install_raid values
+  set_fact:
+    hetzner_installimage_install_raid:
+      - SWRAID {{ sw_raid_status }}
+      - SWRAIDLEVEL {{ sw_raid_level }}
+
+- name: set hetzner_installimage_install_raid value for no raid
+  set_fact:
+    hetzner_installimage_install_drives:
+      - DRIVE1 /dev/{{ first_disk_device.stdout }}
+
+- name: set hetzner_installimage_install_raid value for raid 1
+  set_fact:
+    hetzner_installimage_install_drives:
+      - DRIVE1 /dev/{{ first_disk_device.stdout }}
+      - DRIVE2 /dev/{{ second_disk_device.stdout }}
+
+- debug:
+    var: hetzner_installimage_install_raid
+
+- debug:
+    var: hetzner_installimage_install_drives

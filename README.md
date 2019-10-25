@@ -58,8 +58,6 @@ The following variable can be set optionally, to set the hostname within the het
 
     hetzner_server_name: __YOUR_SERVER_NAME__
 
-
-
 Example Playbook
 ----------------
 
@@ -89,6 +87,27 @@ Installation Steps
     3. Run the hetzner_installimge role
 
 If you are sure, you will not accidentally purge a running machine, allready in use, you can directly run the role with the extra variable **--extra-vars "{ hetzner_installimage_ignore_hostcode: True }"**. This way the role will not check the machine for an existing /etc/hostcode file but will also not prevent the machine from being purged accidentally!
+
+Available images
+----------------
+
+The OS images are located in the folder /root/.oldroot/nfs/images/ inside the rescue system. The
+following images are available at 25 Oct 2019:
+
+* Archlinux-2017-64-minimal.tar.gz
+* archlinux-latest-64-minimal.tar.gz
+* CentOS-610-64-minimal.tar.gz
+* CentOS-76-64-minimal.tar.gz
+* CoreOS-1298-64-production.bin.bz2
+* Debian-101-buster-64-LAMP.tar.gz
+* Debian-101-buster-64-minimal.tar.gz
+* Debian-811-jessie-64-minimal.tar.gz
+* Debian-911-stretch-64-minimal.tar.gz
+* Ubuntu-1604-xenial-64-minimal-no-hwe.tar.gz
+* Ubuntu-1604-xenial-64-minimal.tar.gz
+* Ubuntu-1804-bionic-64-minimal.tar.gz
+* Ubuntu-1804-bionic-64-nextcloud.tar.gz
+* Ubuntu-1904-disco-64-minimal.tar.gz
 
 License
 -------
