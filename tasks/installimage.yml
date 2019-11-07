@@ -1,7 +1,10 @@
 ---
-
 - name: copy public key into tempfile
   shell: /usr/bin/tail -1 /root/.ssh/authorized_keys > tmpKey
+
+- name: include automatic software raid detection when respective variables are not set
+  include_tasks: determine_software_raid.yml
+  when: hetzner_installimage_install_drives is not defined
 
 - name: copy autosetup configuration file
   template:
@@ -16,8 +19,7 @@
   register: result
 
 - name: do another hardware reset
-  local_action:
-    module: uri
+  uri:
     url: "https://robot-ws.your-server.de/reset/{{ ansible_host }}"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
@@ -25,27 +27,31 @@
     force_basic_auth: yes
     body: "type=hw"
     status_code: 200
-    headers:
-      Content-Type: "application/x-www-form-urlencoded"
+    body_format: form-urlencoded
+  delegate_to: localhost
   register: reset
 
 - name: remove server from local known_hosts file
-  local_action: shell ssh-keygen -R {{ ansible_host }}
+  shell: ssh-keygen -R {{ ansible_host }}
+  delegate_to: localhost
 
 - name: pause a bit for the reboot to kick in
   pause: seconds=60
+  delegate_to: localhost
 
 - name: waiting for server to come back
-  local_action:
-    module: wait_for
+  wait_for:
     host: "{{ ansible_host }}"
     port: 22
     delay: 1
     timeout: 180
+  delegate_to: localhost
 
-- name: update apt
+# uses raw instead of module as python might not be installed yet
+- name: update apt repositories
   raw: apt-get update
 
+# uses raw instead of module as python might not be installed yet
 - name: install python on remote host
   raw: apt-get install python -y
 
@@ -61,9 +67,8 @@
     group: root
     mode: 0644
 
-- name: set the server_name
-  local_action:
-    module: uri
+- name: set the server name in the hetzner robot if defined
+  uri:
     url: "https://robot-ws.your-server.de/server/{{ ansible_host }}"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
@@ -71,7 +76,6 @@
     force_basic_auth: yes
     body: "server_name={{ hetzner_server_name }}"
     status_code: 200
+  delegate_to: localhost
   register: hetzner_installimage_rescue
   when: hetzner_server_name is defined
-
-...

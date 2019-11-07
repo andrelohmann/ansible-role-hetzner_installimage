@@ -1,9 +1,20 @@
 ---
-
+# note: when the server was booted into rescue mode already it will still return active = false
+# active = true only appears when rescue mode was activated but the system not yet re-booted 
+- name: check the current rescue mode state
+  uri:
+    url: "https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue"
+    method: GET
+    user: "{{ hetzner_installimage_webservice_username }}"
+    password: "{{ hetzner_installimage_webservice_password }}"
+    force_basic_auth: yes
+    status_code: 200
+  delegate_to: localhost
+  register: hetzner_installimage_rescue
+  when: hetzner_installimage_run
 
 - name: activate rescue mode
-  local_action:
-    module: uri
+  uri:
     url: "https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
@@ -11,13 +22,12 @@
     force_basic_auth: yes
     body: "os=linux&arch=64&authorized_key={{ hetzner_installimage_key_fingerprint }}"
     status_code: 200
-    headers:
-      Content-Type: "application/x-www-form-urlencoded"
-  register: activated
+    body_format: form-urlencoded
+  delegate_to: localhost
+  when: hetzner_installimage_rescue.json.rescue.active == false
 
 - name: Execute hardware reset
-  local_action:
-    module: uri
+  uri:
     url: "https://robot-ws.your-server.de/reset/{{ ansible_host }}"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
@@ -25,22 +35,22 @@
     force_basic_auth: yes
     body: "type=hw"
     status_code: 200
-    headers:
-      Content-Type: "application/x-www-form-urlencoded"
+    body_format: form-urlencoded
+  delegate_to: localhost
   register: reset
 
 - name: remove server from local known_hosts file
-  local_action: shell ssh-keygen -R {{ ansible_host }}
+  shell: ssh-keygen -R {{ ansible_host }}
+  delegate_to: localhost
 
 - name: pause a bit for the hardware reset to kick in
   pause: seconds=15
+  delegate_to: localhost
 
 - name: waiting for server to come back
-  local_action:
-    module: wait_for
+  wait_for:
     host: "{{ ansible_host }}"
     port: 22
     delay: 1
     timeout: 180
-
-...
+  delegate_to: localhost

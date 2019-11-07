@@ -1,11 +1,13 @@
 ---
 # installimage parameters
-hetzner_installimage_install_drives:
-- DRIVE1 /dev/sda
-- DRIVE2 /dev/sdb
-hetzner_installimage_install_raid:
-- SWRAID 1
-- SWRAIDLEVEL 1
+# the following parameters are automatically detected if not set
+# if 2 disks are detected a software raid with level 1 will be configured
+# hetzner_installimage_install_drives:
+# - DRIVE1 /dev/sda
+# - DRIVE2 /dev/sdb
+# hetzner_installimage_install_raid:
+# - SWRAID 1
+# - SWRAIDLEVEL 1
 hetzner_installimage_install_bootloader: grub
 hetzner_installimage_install_hostname: "{{ inventory_hostname }}"
 hetzner_installimage_install_partitions:

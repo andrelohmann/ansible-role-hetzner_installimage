@@ -1,57 +1,61 @@
 ---
+- name: Confirm install for each host
+  pause:
+    prompt: "Really wipe all host data and install fresh OS image on host {{ item }} (y/n) ?"
+  with_items: "{{ play_hosts }}"
+  register: reset_host
+  run_once: true
+  delegate_to: localhost
 
-#- name: connect through ssh from local
-#  local_action: command ssh -oBatchMode=yes root@{{ansible_host}} who
-#  changed_when: False
-#  register: who
+- name: Initialize user_confirmations variable
+  set_fact:
+    user_confirmations: {}
+  run_once: true
+  delegate_to: localhost
 
-#- name: check hostcode
-#  slurp:
-#    src: /etc/hostcode
-#  register: hostcode
-#  when: not hetzner_installimage_ignore_hostcode == 'yes'
-#  ignore_errors: trues
+- name: Add user confirmation for each host
+  set_fact:
+    user_confirmations: "{{ user_confirmations | combine({item.item: item.user_input}) }}"
+  with_items: "{{ reset_host.results }}"
+  run_once: true
+  delegate_to: localhost
 
-#- debug:
-#  msg: "{{ hostcode['content'] | b64decode }}"
-
-- name: check existence of /etc/hostcode
-  stat:
-    path: /etc/hostcode
-  register: hetzner_installimage_hostcode
-  when: not hetzner_installimage_ignore_hostcode == True
-
-- name:
-  set_fact: hetzner_installimage_run=False
-  when: (hetzner_installimage_ignore_hostcode is not defined or not hetzner_installimage_ignore_hostcode == True) and (hetzner_installimage_hostcode is defined and hetzner_installimage_hostcode.stat.exists == True)
-
-- name:
-  set_fact: hetzner_installimage_run=True
-  when: hetzner_installimage_ignore_hostcode == True or (hetzner_installimage_hostcode is defined and hetzner_installimage_hostcode.stat.exists == False)
-
-- name: fail tasks if hetzner_installimage run == False
+- name: Fail playbook if confirmation was not successful
   fail:
-    msg: "File /etc/hostcode exists on host {{ansible_host}}"
+    msg: "installimage skipped for host {{ inventory_hostname }} "
+  when: user_confirmations[inventory_hostname] is not defined or user_confirmations[inventory_hostname] != 'y'
+
+- name: Check existence of /etc/hostcode if possible
+  block:
+    - name: Check existence of /etc/hostcode
+      stat:
+        path: /etc/hostcode
+      register: hetzner_installimage_hostcode
+      when: not hetzner_installimage_ignore_hostcode == true
+      ignore_errors: yes
+  ignore_unreachable: true # if an error is returned here the host might not have the ssh key yet
+
+- name: Hosts that can not be connected due to mising ssh key should not be marked as unavailable
+  meta: clear_host_errors
+
+- name: Set default value for hetzner_installimage_run
+  set_fact: 
+    hetzner_installimage_run: true
+
+- name: Overwrite hetzner_installimage_run when conditons match
+  set_fact: 
+    hetzner_installimage_run: false
+  when: (hetzner_installimage_ignore_hostcode is not defined or not hetzner_installimage_ignore_hostcode == true) and (hetzner_installimage_hostcode.stat is defined and hetzner_installimage_hostcode.stat.exists == true)
+
+- name: Fail playbook if image is not supposed to be installed
+  fail:
+    msg: "File /etc/hostcode exists on host {{ansible_host}}. Set hetzner_installimage_ignore_hostcode=true to force installation."
   when: not hetzner_installimage_run
 
-- name: check the current rescue mode state
-  local_action:
-    module: uri
-    url: "https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue"
-    method: GET
-    user: "{{ hetzner_installimage_webservice_username }}"
-    password: "{{ hetzner_installimage_webservice_password }}"
-    force_basic_auth: yes
-    status_code: 200
-  register: hetzner_installimage_rescue
-  when: hetzner_installimage_run
-
-- name: include rescue mode
+- name: Include rescue mode handling tasks
   include: rescuemode.yml
-  when: hetzner_installimage_run and hetzner_installimage_rescue.json.rescue.active == false and not ansible_check_mode
+  when: hetzner_installimage_run and not ansible_check_mode
 
-- name: include installimage
+- name: Include installimage handling tasks
   include: installimage.yml
-  when: hetzner_installimage_run and hetzner_installimage_rescue.json.rescue.active == false and not ansible_check_mode
-
-...
+  when: hetzner_installimage_run and not ansible_check_mode
