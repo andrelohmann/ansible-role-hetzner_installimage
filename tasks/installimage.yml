@@ -37,6 +37,7 @@
 
 - name: pause a bit for the reboot to kick in
   pause: seconds=60
+  delegate_to: localhost
 
 - name: waiting for server to come back
   wait_for:

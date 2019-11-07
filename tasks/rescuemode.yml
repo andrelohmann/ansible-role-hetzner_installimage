@@ -45,6 +45,7 @@
 
 - name: pause a bit for the hardware reset to kick in
   pause: seconds=15
+  delegate_to: localhost
 
 - name: waiting for server to come back
   wait_for:

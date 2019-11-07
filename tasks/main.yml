@@ -1,28 +1,61 @@
 ---
-- name: check existence of /etc/hostcode
-  stat:
-    path: /etc/hostcode
-  register: hetzner_installimage_hostcode
-  when: not hetzner_installimage_ignore_hostcode == True
+- name: Confirm install for each host
+  pause:
+    prompt: "Really wipe all host data and install fresh OS image on host {{ item }} (y/n) ?"
+  with_items: "{{ play_hosts }}"
+  register: reset_host
+  run_once: true
+  delegate_to: localhost
+
+- name: Initialize user_confirmations variable
+  set_fact:
+    user_confirmations: {}
+  run_once: true
+  delegate_to: localhost
+
+- name: Add user confirmation for each host
+  set_fact:
+    user_confirmations: "{{ user_confirmations | combine({item.item: item.user_input}) }}"
+  with_items: "{{ reset_host.results }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: Fail playbook if confirmation was not successful
+  fail:
+    msg: "installimage skipped for host {{ inventory_hostname }} "
+  when: user_confirmations[inventory_hostname] is not defined or user_confirmations[inventory_hostname] != 'y'
+
+- name: Check existence of /etc/hostcode if possible
+  block:
+    - name: Check existence of /etc/hostcode
+      stat:
+        path: /etc/hostcode
+      register: hetzner_installimage_hostcode
+      when: not hetzner_installimage_ignore_hostcode == true
+      ignore_errors: yes
+  ignore_unreachable: true # if an error is returned here the host might not have the ssh key yet
+
+- name: Hosts that can not be connected due to mising ssh key should not be marked as unavailable
+  meta: clear_host_errors
 
 - name: Set default value for hetzner_installimage_run
   set_fact: 
-    hetzner_installimage_run: True
+    hetzner_installimage_run: true
 
 - name: Overwrite hetzner_installimage_run when conditons match
   set_fact: 
-    hetzner_installimage_run: False
-  when: (hetzner_installimage_ignore_hostcode is not defined or not hetzner_installimage_ignore_hostcode == True) and (hetzner_installimage_hostcode is defined and hetzner_installimage_hostcode.stat.exists == True)
+    hetzner_installimage_run: false
+  when: (hetzner_installimage_ignore_hostcode is not defined or not hetzner_installimage_ignore_hostcode == true) and (hetzner_installimage_hostcode.stat is defined and hetzner_installimage_hostcode.stat.exists == true)
 
-- name: fail playbook if image is not supposed to be installed
+- name: Fail playbook if image is not supposed to be installed
   fail:
-    msg: "File /etc/hostcode exists on host {{ansible_host}}. Set hetzner_installimage_ignore_hostcode=True to force installation."
+    msg: "File /etc/hostcode exists on host {{ansible_host}}. Set hetzner_installimage_ignore_hostcode=true to force installation."
   when: not hetzner_installimage_run
 
-- name: include rescue mode handling tasks
+- name: Include rescue mode handling tasks
   include: rescuemode.yml
   when: hetzner_installimage_run and not ansible_check_mode
 
-- name: include installimage handling tasks
+- name: Include installimage handling tasks
   include: installimage.yml
   when: hetzner_installimage_run and not ansible_check_mode
