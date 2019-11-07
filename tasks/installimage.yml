@@ -4,7 +4,7 @@
 
 - name: include automatic software raid detection when respective variables are not set
   include_tasks: determine_software_raid.yml
-  when: hetzner_installimage_install_raid is not defined and hetzner_installimage_install_drives is not defined
+  when: hetzner_installimage_install_drives is not defined
 
 - name: copy autosetup configuration file
   template:

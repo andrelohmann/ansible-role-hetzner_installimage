@@ -26,21 +26,22 @@
   when: disk_number.stdout_lines|length == 2
 
 - name: automatically determine first disk device
-  shell: lsblk | grep disk | head -1 | tail -1 | awk '{split($0, a, " "); print a[1]}'
+  shell: lsblk | grep disk | awk '{split($0, a, " "); print a[1]}' | sort | head -1 | tail -1
   register: first_disk_device
 
 - name: automatically determine second disk device for raid level 1
-  shell: lsblk | grep disk | head -2 | tail -1 | awk '{split($0, a, " "); print a[1]}'
+  shell: lsblk | grep disk | awk '{split($0, a, " "); print a[1]}' | sort | head -2 | tail -1
   register: second_disk_device
   when: sw_raid_status == 1
 
-- name: set hetzner_installimage_install_raid values
+- name: set hetzner_installimage_install_raid values when not defined
   set_fact:
     hetzner_installimage_install_raid:
       - SWRAID {{ sw_raid_status }}
       - SWRAIDLEVEL {{ sw_raid_level }}
+  when: hetzner_installimage_install_raid is not defined
 
-- name: set hetzner_installimage_install_raid value for no raid
+- name: set hetzner_installimage_install_raid value for no raid / single disk
   set_fact:
     hetzner_installimage_install_drives:
       - DRIVE1 /dev/{{ first_disk_device.stdout }}
@@ -50,9 +51,4 @@
     hetzner_installimage_install_drives:
       - DRIVE1 /dev/{{ first_disk_device.stdout }}
       - DRIVE2 /dev/{{ second_disk_device.stdout }}
-
-- debug:
-    var: hetzner_installimage_install_raid
-
-- debug:
-    var: hetzner_installimage_install_drives
+  when: disk_number.stdout_lines|length == 2
