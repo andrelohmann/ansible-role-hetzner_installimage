@@ -48,12 +48,19 @@
   delegate_to: localhost
 
 # uses raw instead of module as python might not be installed yet
-- name: update apt repositories
-  raw: apt-get update
-
-# uses raw instead of module as python might not be installed yet
 - name: install python on remote host
   raw: apt-get install python -y
+  when: ansible_os_family == "Debian"
+
+# uses raw instead of module as python might not be installed yet
+- name: install python3 on remote host
+  raw: yum -y install python3
+  when: ansible_os_family == "RedHat"
+
+- name: update system
+  package:
+    name: "*"
+    state: latest
 
 - name: generate hostcode
   set_fact:
