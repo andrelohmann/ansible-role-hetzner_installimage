@@ -1,4 +1,7 @@
 ---
+
+- debug: var=ansible_host
+
 - name: Confirm install for each host
   pause:
     prompt: "Really wipe all host data and install fresh OS image on host {{ item }} (y/n) ?"
@@ -49,7 +52,7 @@
 
 - name: Fail playbook if image is not supposed to be installed
   fail:
-    msg: "File /etc/hostcode exists on host {{ansible_host}}. Set hetzner_installimage_ignore_hostcode=true to force installation."
+    msg: "File /etc/hostcode exists on host {{ ansible_host }}. Set hetzner_installimage_ignore_hostcode=true to force installation."
   when: not hetzner_installimage_run
 
 - name: Include rescue mode handling tasks

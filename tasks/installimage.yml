@@ -20,7 +20,7 @@
 
 - name: do another hardware reset
   uri:
-    url: "https://robot-ws.your-server.de/reset/{{ ansible_host }}"
+    url: "https://robot-ws.your-server.de/reset/{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
     password: "{{ hetzner_installimage_webservice_password }}"
@@ -32,7 +32,7 @@
   register: reset
 
 - name: remove server from local known_hosts file
-  shell: ssh-keygen -R {{ ansible_host }}
+  shell: ssh-keygen -R {{ inventory_hostname }}
   delegate_to: localhost
 
 - name: pause a bit for the reboot to kick in
@@ -41,7 +41,7 @@
 
 - name: waiting for server to come back
   wait_for:
-    host: "{{ ansible_host }}"
+    host: "{{ inventory_hostname }}"
     port: 22
     delay: 1
     timeout: 180
@@ -79,7 +79,7 @@
 
 - name: generate hostcode
   set_fact:
-    _hostcode: "{{ ansible_host | md5 }}"
+    _hostcode: "{{ inventory_hostname | md5 }}"
 
 - name: create hostcode file
   template:
@@ -91,7 +91,7 @@
 
 - name: set the server name in the hetzner robot if defined
   uri:
-    url: "https://robot-ws.your-server.de/server/{{ ansible_host }}"
+    url: "https://robot-ws.your-server.de/server/{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
     password: "{{ hetzner_installimage_webservice_password }}"

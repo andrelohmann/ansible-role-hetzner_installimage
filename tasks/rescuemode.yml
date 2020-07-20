@@ -3,7 +3,7 @@
 # active = true only appears when rescue mode was activated but the system not yet re-booted 
 - name: check the current rescue mode state
   uri:
-    url: "https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue"
+    url: "https://robot-ws.your-server.de/boot/{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}/rescue"
     method: GET
     user: "{{ hetzner_installimage_webservice_username }}"
     password: "{{ hetzner_installimage_webservice_password }}"
@@ -15,7 +15,7 @@
 
 - name: activate rescue mode
   uri:
-    url: "https://robot-ws.your-server.de/boot/{{ ansible_host }}/rescue"
+    url: "https://robot-ws.your-server.de/boot/{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}/rescue"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
     password: "{{ hetzner_installimage_webservice_password }}"
@@ -28,7 +28,7 @@
 
 - name: Execute hardware reset
   uri:
-    url: "https://robot-ws.your-server.de/reset/{{ ansible_host }}"
+    url: "https://robot-ws.your-server.de/reset/{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
     password: "{{ hetzner_installimage_webservice_password }}"
@@ -40,7 +40,7 @@
   register: reset
 
 - name: remove server from local known_hosts file
-  shell: ssh-keygen -R {{ ansible_host }}
+  shell: ssh-keygen -R {{ inventory_hostname }}
   delegate_to: localhost
 
 - name: pause a bit for the hardware reset to kick in
@@ -49,7 +49,7 @@
 
 - name: waiting for server to come back
   wait_for:
-    host: "{{ ansible_host }}"
+    host: "{{ inventory_hostname }}"
     port: 22
     delay: 1
     timeout: 180
