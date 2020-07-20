@@ -47,19 +47,32 @@
     timeout: 180
   delegate_to: localhost
 
-# uses raw instead of module as python might not be installed yet
-- name: install python on remote host
-  raw: apt-get install python -y
-  when: ansible_os_family == "Debian"
+# uses raw instead of module as python might ont be installed yet
+- name: easy os detector
+  raw: 'echo -n $(test -f /etc/redhat-release && echo "RedHat" && exit 0 || test -f /etc/debian_version && echo "Debian" && exit 0 || test -f /etc/SuSE-release && echo "Suse" && exit 0 || echo "Unknown")'
+  register: os_switch
+  changed_when: false
 
-# uses raw instead of module as python might not be installed yet
-- name: install python3 on remote host
-  raw: yum -y install python3
-  when: ansible_os_family == "RedHat"
+# uses raw instead of module as python might ont be installed yet
+- name: (Debian/Ubuntu) install python
+  raw: 'apt-get install python -y'
+  when:
+    - os_switch is defined
+    - os_switch.stdout == 'Debian'
 
-- name: update system
+# uses raw instead of module as python might ont be installed yet
+- name: (RedHat) install python3
+  raw: 'yum -y install python3'
+  when:
+    - os_switch is defined
+    - os_switch.stdout == 'RedHat'
+
+- name: update facts
+  setup:
+
+- name: update packages
   package:
-    name: "*"
+    name: '*'
     state: latest
 
 - name: generate hostcode
