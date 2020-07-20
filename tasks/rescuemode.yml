@@ -54,3 +54,5 @@
     delay: 1
     timeout: 180
   delegate_to: localhost
+
+- include: add_server_to_known_hosts.yml

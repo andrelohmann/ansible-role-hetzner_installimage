@@ -1,0 +1,14 @@
+---
+- name: scan for server's public key
+  shell: "ssh-keyscan -t ecdsa {{ inventory_hostname }}"
+  register: ssh_known_host_results
+  ignore_errors: yes
+  delegate_to: localhost
+
+- name: ensure the server's public key in known_hosts exists
+  known_hosts:
+    name: "{{ inventory_hostname }}"
+    key: "{{ ssh_known_host_results.stdout }}"
+    path: "{{ hetzner_installimage_known_hosts_file }}"
+  delegate_to: localhost
+...

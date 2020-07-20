@@ -17,4 +17,7 @@ hetzner_installimage_install_partitions:
 hetzner_installimage_install_image: /root/.oldroot/nfs/images/Ubuntu-1604-xenial-64-minimal.tar.gz
 # prevent reinstallation of running servers with /etc/hostcode file
 hetzner_installimage_ignore_hostcode: False
+
+# know hosts file location on ansible control node
+hetzner_installimage_known_hosts_file: "{{ lookup('env','HOME') + '/.ssh/known_hosts' }}"
 ...

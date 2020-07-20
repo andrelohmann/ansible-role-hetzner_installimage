@@ -47,6 +47,8 @@
     timeout: 180
   delegate_to: localhost
 
+- include: add_server_to_known_hosts.yml
+
 # uses raw instead of module as python might ont be installed yet
 - name: easy os detector
   raw: 'echo -n $(test -f /etc/redhat-release && echo "RedHat" && exit 0 || test -f /etc/debian_version && echo "Debian" && exit 0 || test -f /etc/SuSE-release && echo "Suse" && exit 0 || echo "Unknown")'
