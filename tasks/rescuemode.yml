@@ -39,9 +39,12 @@
   delegate_to: localhost
   register: reset
 
-- name: remove server from local known_hosts file
-  shell: ssh-keygen -R {{ inventory_hostname }}
-  delegate_to: localhost
+- name: remove ssh keys per host
+  include_tasks: modify_known_hosts.yml
+  vars:
+    modify_known_hosts_state: absent
+  loop: "{{ ansible_play_batch }}"
+  run_once: true
 
 - name: pause a bit for the hardware reset to kick in
   pause: seconds=15
@@ -49,10 +52,15 @@
 
 - name: waiting for server to come back
   wait_for:
-    host: "{{ inventory_hostname }}"
+    host: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     port: 22
     delay: 1
     timeout: 180
   delegate_to: localhost
 
-- include: add_server_to_known_hosts.yml
+- name: add ssh keys per host
+  include_tasks: modify_known_hosts.yml
+  vars:
+    modify_known_hosts_state: present
+  loop: "{{ ansible_play_batch }}"
+  run_once: true

@@ -1,4 +1,10 @@
 ---
+- name: Clear gathered facts from all currently targeted hosts
+  meta: clear_facts
+
+- name: update facts since we now switched back to the rescue system
+  setup:
+
 - name: copy public key into tempfile
   shell: /usr/bin/tail -1 /root/.ssh/authorized_keys > tmpKey
 
@@ -32,8 +38,11 @@
   register: reset
 
 - name: remove server from local known_hosts file
-  shell: ssh-keygen -R {{ inventory_hostname }}
-  delegate_to: localhost
+  include_tasks: modify_known_hosts.yml
+  vars:
+    modify_known_hosts_state: absent
+  loop: "{{ ansible_play_batch }}"
+  run_once: true
 
 - name: pause a bit for the reboot to kick in
   pause: seconds=60
@@ -41,13 +50,18 @@
 
 - name: waiting for server to come back
   wait_for:
-    host: "{{ inventory_hostname }}"
+    host: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     port: 22
     delay: 1
     timeout: 180
   delegate_to: localhost
 
-- include: add_server_to_known_hosts.yml
+- name: add ssh keys per host
+  include_tasks: modify_known_hosts.yml
+  vars:
+    modify_known_hosts_state: present
+  loop: "{{ ansible_play_batch }}"
+  run_once: true
 
 # uses raw instead of module as python might ont be installed yet
 - name: easy os detector
@@ -62,12 +76,15 @@
     - os_switch is defined
     - os_switch.stdout == 'Debian'
 
-# uses raw instead of module as python might ont be installed yet
+# uses raw instead of module as python might not be installed yet
 - name: (RedHat) install python3
   raw: 'yum -y install python3'
   when:
     - os_switch is defined
     - os_switch.stdout == 'RedHat'
+
+- name: Clear gathered facts from all currently targeted hosts
+  meta: clear_facts
 
 - name: update facts
   setup:
@@ -88,6 +105,12 @@
     owner: root
     group: root
     mode: 0644
+
+# - name: remove alternative which has been set before
+#   command: "alternatives --remove python3 /usr/bin/python3.6"
+#   when:
+#     - os_switch is defined
+#     - os_switch.stdout == 'RedHat'
 
 - name: set the server name in the hetzner robot if defined
   uri:
