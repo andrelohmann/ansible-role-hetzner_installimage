@@ -20,7 +20,6 @@
     group: root
     mode: 0644
 
-# ignore errors when a custom image is used
 - name: run installimage
   command: /root/.oldroot/nfs/install/installimage -K /root/tmpKey
   register: result
