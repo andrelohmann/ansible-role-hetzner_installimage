@@ -20,6 +20,6 @@ hetzner_installimage_ignore_hostcode: False
 # timeout to wait for servers to come back after hardware reset
 hetzner_installimage_wait_timeout_after_reset: 180
 
-# know hosts file location on ansible control node
-hetzner_installimage_known_hosts_file: "{{ lookup('env','HOME') + '/.ssh/known_hosts' }}"
+# whether this role ios allowed to modify your known hosts or not
+hetzner_installimage_handle_known_hosts: False
 ...

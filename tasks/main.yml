@@ -1,15 +1,20 @@
 ---
 
-- name: set the correct ip from the fact if ansible_host wasn't specified.
-  set_fact:
-    ssh_host_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
-  delegate_to: localhost
-  when: ansible_host == 'localhost'
-
-- name: set the ip to ansible_host as it was set in the inventory.
-  set_fact:
-    ssh_host_ip: "{{ ansible_host }}"
-  when: ssh_host_ip is not defined
+- block:
+  - name: set the correct ip from the fact if ansible_host wasn't specified.
+    set_fact:
+      ssh_host_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+    delegate_to: localhost
+    when: ansible_host == 'localhost'
+  - name: set the ip to ansible_host as it was set in the inventory.
+    set_fact:
+      ssh_host_ip: "{{ ansible_host }}"
+    when: ssh_host_ip is not defined
+  - name: get known hosts file
+    shell: "ssh -G {{ ansible_host}} {{ ansible_ssh_common_args | default('') }} | grep userknownhostsfile | cut -d ' ' -f2"
+    register: hetzner_installimage_known_hosts_file_result
+    delegate_to: localhost
+  when: hetzner_installimage_handle_known_hosts | bool
 
 - name: Confirm install for each host
   pause:
