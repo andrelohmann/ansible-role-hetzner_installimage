@@ -1,44 +1,53 @@
 ---
-- name: set ssh_known_host_results to nothing
-  set_fact:
-    ssh_known_host_result: ''
+- block:
+  - name: set fact for known hosts file
+    set_fact:
+      hetzner_installimage_known_hosts_file: "{{ hetzner_installimage_known_hosts_file_result.stdout }}"
 
-- name: set default for modify_known_hosts_state
-  set_fact:
-    modify_known_hosts_state: present
-  when:
-    - modify_known_hosts_state is not defined
-    - modify_known_hosts_state | lower not in ("present", "absent")
+  - name: set ssh_known_host_results to nothing
+    set_fact:
+      ssh_known_host_result: ''
 
-- name: check the hostnames key
-  command: "ssh-keyscan -t ecdsa {{ hostvars[item]['inventory_hostname'] }}"
-  register: ssh_known_host_result
-  delegate_to: localhost
-  when:
-    - hostvars[item]['ansible_host'] is not defined
-    - modify_known_hosts_state == 'present'
+  - name: set default for modify_known_hosts_state
+    set_fact:
+      modify_known_hosts_state: present
+    when:
+      - modify_known_hosts_state is not defined
+      - modify_known_hosts_state | lower not in ("present", "absent")
 
-- name: ensure the server's hostname public key in known_hosts is added/removed
-  known_hosts:
-    name: "{{ hostvars[item]['inventory_hostname'] }}"
-    key: "{{ ssh_known_host_result.stdout | default(omit) }}"
-    path: "{{ hetzner_installimage_known_hosts_file }}"
-    state: "{{ modify_known_hosts_state | lower }}"
-  delegate_to: localhost
-  when: hostvars[item]['ansible_host'] is not defined
+  - name: check the hostnames key
+    command: "ssh-keyscan -t ecdsa {{ hostvars[item]['inventory_hostname'] }}"
+    register: ssh_known_host_result
+    delegate_to: localhost
+    when:
+      - hostvars[item]['ansible_host'] is not defined
+      - modify_known_hosts_state == 'present'
 
-- name: check the ip key
-  command: "ssh-keyscan -t ecdsa {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
-  register: ssh_known_host_result
-  delegate_to: localhost
-  when:
-    - modify_known_hosts_state == 'present'
+  - name: ensure the server's hostname public key in known_hosts is added/removed
+    known_hosts:
+      name: "{{ hostvars[item]['inventory_hostname'] }}"
+      key: "{{ ssh_known_host_result.stdout | default(omit) }}"
+      path: "{{ hetzner_installimage_known_hosts_file }}"
+      state: "{{ modify_known_hosts_state | lower }}"
+    delegate_to: localhost
+    when: hostvars[item]['ansible_host'] is not defined
 
-- name: ensure the server's ip public key in known_hosts is added/removed
-  known_hosts:
-    name: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}"
-    key: "{{ ssh_known_host_result.stdout | default(omit) }}"
-    path: "{{ hetzner_installimage_known_hosts_file }}"
-    state: "{{ modify_known_hosts_state | lower }}"
-  delegate_to: localhost
+  - name: check the ip key
+    command: "ssh-keyscan -t ecdsa {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+    register: ssh_known_host_result
+    delegate_to: localhost
+    when:
+      - modify_known_hosts_state == 'present'
+
+  - name: ensure the server's ip public key in known_hosts is added/removed
+    known_hosts:
+      name: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+      key: "{{ ssh_known_host_result.stdout | default(omit) }}"
+      path: "{{ hetzner_installimage_known_hosts_file }}"
+      state: "{{ modify_known_hosts_state | lower }}"
+    delegate_to: localhost
+  rescue:
+    - debug:
+        msg: "continue despite errors in known hosts file handling"
+  when: hetzner_installimage_handle_known_hosts | bool
 ...
