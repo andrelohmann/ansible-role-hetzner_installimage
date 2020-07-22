@@ -56,7 +56,7 @@
     timeout: "{{ hetzner_installimage_wait_timeout_after_reset }}"
   delegate_to: localhost
 
-- name: add ssh keys per host
+- name: add ssh host keys to known hosts
   include_tasks: modify_known_hosts.yml
   vars:
     modify_known_hosts_state: present
