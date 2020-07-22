@@ -4,12 +4,18 @@
 
 - name: update facts since we now switched back to the rescue system
   setup:
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
 
 - name: copy public key into tempfile
   shell: /usr/bin/tail -1 /root/.ssh/authorized_keys > tmpKey
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
 
 - name: include automatic software raid detection when respective variables are not set
   include_tasks: determine_software_raid.yml
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
   when: hetzner_installimage_install_drives is not defined
 
 - name: copy autosetup configuration file
@@ -19,10 +25,14 @@
     owner: root
     group: root
     mode: 0644
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
 
 - name: run installimage
   command: /root/.oldroot/nfs/install/installimage -K /root/tmpKey
   register: result
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
 
 - name: do another hardware reset
   uri:
