@@ -53,46 +53,45 @@
     host: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     port: 22
     delay: 1
-    timeout: 180
+    timeout: "{{ hetzner_installimage_wait_timeout_after_reset }}"
   delegate_to: localhost
 
-- name: add ssh keys per host
+- name: add ssh host keys to known hosts
   include_tasks: modify_known_hosts.yml
   vars:
     modify_known_hosts_state: present
   loop: "{{ ansible_play_batch }}"
   run_once: true
 
-# uses raw instead of module as python might ont be installed yet
-- name: easy os detector
-  raw: 'echo -n $(test -f /etc/redhat-release && echo "RedHat" && exit 0 || test -f /etc/debian_version && echo "Debian" && exit 0 || test -f /etc/SuSE-release && echo "Suse" && exit 0 || echo "Unknown")'
-  register: os_switch
-  changed_when: false
-
-# uses raw instead of module as python might ont be installed yet
-- name: (Debian/Ubuntu) install python
-  raw: 'apt-get install python -y'
-  when:
-    - os_switch is defined
-    - os_switch.stdout == 'Debian'
-
-# uses raw instead of module as python might not be installed yet
-- name: (RedHat) install python3
-  raw: 'yum -y install python3'
-  when:
-    - os_switch is defined
-    - os_switch.stdout == 'RedHat'
-
 - name: Clear gathered facts from all currently targeted hosts
   meta: clear_facts
 
-- name: update facts
+- name: update facts since we now have our OS installed
   setup:
 
-- name: update packages
-  package:
-    name: '*'
-    state: latest
+# uses raw instead of module as python might not be installed yet
+- name: (Debian/Ubuntu) install python
+  raw: 'apt-get install python -y'
+  when:
+    - ansible_os_family == 'Debian'
+    - discovered_interpreter_python is undefined or discovered_interpreter_python == ''
+  register: install_python_debian
+
+# uses raw instead of module as python might not be installed yet
+- name: (CentOS) install python3
+  raw: 'yum -y install python3'
+  when:
+    - ansible_distribution == 'CentOS'
+    - discovered_interpreter_python is undefined or discovered_interpreter_python == ''
+  register: install_python_centos
+
+- block:
+  - name: Clear gathered facts from all currently targeted hosts
+    meta: clear_facts
+  - name: update facts
+    setup:
+  when:
+    - install_python_debian is not skipped or install_python_centos is not skipped
 
 - name: generate hostcode
   set_fact:
@@ -105,12 +104,6 @@
     owner: root
     group: root
     mode: 0644
-
-# - name: remove alternative which has been set before
-#   command: "alternatives --remove python3 /usr/bin/python3.6"
-#   when:
-#     - os_switch is defined
-#     - os_switch.stdout == 'RedHat'
 
 - name: set the server name in the hetzner robot if defined
   uri:

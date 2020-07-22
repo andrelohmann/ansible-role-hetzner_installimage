@@ -55,7 +55,7 @@
     host: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     port: 22
     delay: 1
-    timeout: 180
+    timeout: "{{ hetzner_installimage_wait_timeout_after_reset }}"
   delegate_to: localhost
 
 - name: add ssh keys per host
