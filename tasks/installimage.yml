@@ -69,7 +69,7 @@
 - name: update facts since we now have our OS installed
   setup:
 
-# uses raw instead of module as python might ont be installed yet
+# uses raw instead of module as python might not be installed yet
 - name: (Debian/Ubuntu) install python
   raw: 'apt-get install python -y'
   when:
