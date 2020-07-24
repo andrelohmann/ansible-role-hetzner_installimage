@@ -33,6 +33,8 @@
   register: result
   vars:
     ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
+  environment:
+    TERM: xterm
 
 - name: do another hardware reset
   uri:
