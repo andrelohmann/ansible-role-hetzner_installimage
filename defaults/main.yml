@@ -24,5 +24,5 @@ hetzner_installimage_wait_timeout_after_reset: 180
 hetzner_installimage_handle_known_hosts: False
 
 # which python interpreter to be use on the rescue system
-hetzner_installimage_rescue_python: /usr/bin/python
+hetzner_installimage_rescue_python: /usr/bin/python3
 ...
