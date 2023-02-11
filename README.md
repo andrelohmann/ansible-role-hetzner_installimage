@@ -58,6 +58,10 @@ The following variable can be set optionally, to set the hostname within the het
 
     hetzner_server_name: __YOUR_SERVER_NAME__
 
+The following variable can be set in group_vars/host_vars to allow skipping the user confirmation before wiping everything:
+
+    `hetzner_installimage_disable_user_confirmation: false|true`
+
 Example Playbook
 ----------------
 

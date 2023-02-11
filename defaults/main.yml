@@ -1,4 +1,7 @@
 ---
+# whether you want to be prompted for confirmation before wiping everything
+hetzner_installimage_disable_user_confirmation: false
+
 # installimage parameters
 # the following parameters are automatically detected if not set
 # if 2 disks are detected a software raid with level 1 will be configured

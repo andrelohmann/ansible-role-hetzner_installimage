@@ -16,31 +16,34 @@
     delegate_to: localhost
   when: hetzner_installimage_handle_known_hosts | bool
 
-- name: Confirm install for each host
-  pause:
-    prompt: "Really wipe all host data and install fresh OS image on host {{ item }} (y/n) ?"
-  with_items: "{{ play_hosts }}"
-  register: reset_host
-  run_once: true
-  delegate_to: localhost
+- name: User confirmations
+  block:
+    - name: Confirm install for each host
+      pause:
+        prompt: "Really wipe all host data and install fresh OS image on host {{ item }} (y/n) ?"
+      with_items: "{{ play_hosts }}"
+      register: reset_host
+      run_once: true
+      delegate_to: localhost
 
-- name: Initialize user_confirmations variable
-  set_fact:
-    user_confirmations: {}
-  run_once: true
-  delegate_to: localhost
+    - name: Initialize user_confirmations variable
+      set_fact:
+        user_confirmations: {}
+      run_once: true
+      delegate_to: localhost
 
-- name: Add user confirmation for each host
-  set_fact:
-    user_confirmations: "{{ user_confirmations | combine({item.item: item.user_input}) }}"
-  with_items: "{{ reset_host.results }}"
-  run_once: true
-  delegate_to: localhost
+    - name: Add user confirmation for each host
+      set_fact:
+        user_confirmations: "{{ user_confirmations | combine({item.item: item.user_input}) }}"
+      with_items: "{{ reset_host.results }}"
+      run_once: true
+      delegate_to: localhost
 
-- name: Fail playbook if confirmation was not successful
-  fail:
-    msg: "installimage skipped for host {{ inventory_hostname }} "
-  when: user_confirmations[inventory_hostname] is not defined or user_confirmations[inventory_hostname] != 'y'
+    - name: Fail playbook if confirmation was not successful
+      fail:
+        msg: "installimage skipped for host {{ inventory_hostname }} "
+      when: user_confirmations[inventory_hostname] is not defined or user_confirmations[inventory_hostname] != 'y'
+  when: not (hetzner_installimage_disable_user_confirmation|bool)
 
 - name: Check existence of /etc/hostcode if possible
   block:
