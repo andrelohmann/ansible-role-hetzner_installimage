@@ -1,9 +1,21 @@
 ---
+- name: Clear gathered facts from all currently targeted hosts
+  meta: clear_facts
+
+- name: update facts since we now switched back to the rescue system
+  setup:
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
+
 - name: copy public key into tempfile
   shell: /usr/bin/tail -1 /root/.ssh/authorized_keys > tmpKey
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
 
 - name: include automatic software raid detection when respective variables are not set
   include_tasks: determine_software_raid.yml
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
   when: hetzner_installimage_install_drives is not defined
 
 - name: copy autosetup configuration file
@@ -13,14 +25,20 @@
     owner: root
     group: root
     mode: 0644
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
 
 - name: run installimage
   command: /root/.oldroot/nfs/install/installimage -K /root/tmpKey
   register: result
+  vars:
+    ansible_python_interpreter: "{{ hetzner_installimage_rescue_python }}"
+  environment:
+    TERM: xterm
 
 - name: do another hardware reset
   uri:
-    url: "https://robot-ws.your-server.de/reset/{{ ansible_host }}"
+    url: "https://robot-ws.your-server.de/reset/{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
     password: "{{ hetzner_installimage_webservice_password }}"
@@ -32,8 +50,11 @@
   register: reset
 
 - name: remove server from local known_hosts file
-  shell: ssh-keygen -R {{ ansible_host }}
-  delegate_to: localhost
+  include_tasks: modify_known_hosts.yml
+  vars:
+    modify_known_hosts_state: absent
+  loop: "{{ ansible_play_batch }}"
+  run_once: true
 
 - name: pause a bit for the reboot to kick in
   pause: seconds=60
@@ -41,23 +62,52 @@
 
 - name: waiting for server to come back
   wait_for:
-    host: "{{ ansible_host }}"
+    host: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     port: 22
     delay: 1
-    timeout: 180
+    timeout: "{{ hetzner_installimage_wait_timeout_after_reset }}"
   delegate_to: localhost
 
-# uses raw instead of module as python might not be installed yet
-- name: update apt repositories
-  raw: apt-get update
+- name: add ssh host keys to known hosts
+  include_tasks: modify_known_hosts.yml
+  vars:
+    modify_known_hosts_state: present
+  loop: "{{ ansible_play_batch }}"
+  run_once: true
+
+- name: Clear gathered facts from all currently targeted hosts
+  meta: clear_facts
+
+- name: update facts since we now have our OS installed
+  setup:
 
 # uses raw instead of module as python might not be installed yet
-- name: install python on remote host
-  raw: apt-get install python -y
+- name: (Debian/Ubuntu) install python
+  raw: 'apt-get install python -y'
+  when:
+    - ansible_os_family == 'Debian'
+    - discovered_interpreter_python is undefined or discovered_interpreter_python == ''
+  register: install_python_debian
+
+# uses raw instead of module as python might not be installed yet
+- name: (CentOS) install python3
+  raw: 'yum -y install python3'
+  when:
+    - ansible_distribution == 'CentOS'
+    - discovered_interpreter_python is undefined or discovered_interpreter_python == ''
+  register: install_python_centos
+
+- block:
+  - name: Clear gathered facts from all currently targeted hosts
+    meta: clear_facts
+  - name: update facts
+    setup:
+  when:
+    - install_python_debian is not skipped or install_python_centos is not skipped
 
 - name: generate hostcode
   set_fact:
-    _hostcode: "{{ ansible_host | md5 }}"
+    _hostcode: "{{ inventory_hostname | md5 }}"
 
 - name: create hostcode file
   template:
@@ -69,7 +119,7 @@
 
 - name: set the server name in the hetzner robot if defined
   uri:
-    url: "https://robot-ws.your-server.de/server/{{ ansible_host }}"
+    url: "https://robot-ws.your-server.de/server/{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     method: POST
     user: "{{ hetzner_installimage_webservice_username }}"
     password: "{{ hetzner_installimage_webservice_password }}"

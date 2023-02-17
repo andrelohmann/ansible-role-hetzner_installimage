@@ -1,4 +1,7 @@
 ---
+# whether you want to be prompted for confirmation before wiping everything
+hetzner_installimage_disable_user_confirmation: false
+
 # installimage parameters
 # the following parameters are automatically detected if not set
 # if 2 disks are detected a software raid with level 1 will be configured
@@ -17,4 +20,12 @@ hetzner_installimage_install_partitions:
 hetzner_installimage_install_image: /root/.oldroot/nfs/images/Ubuntu-1604-xenial-64-minimal.tar.gz
 # prevent reinstallation of running servers with /etc/hostcode file
 hetzner_installimage_ignore_hostcode: False
+# timeout to wait for servers to come back after hardware reset
+hetzner_installimage_wait_timeout_after_reset: 180
+
+# whether this role ios allowed to modify your known hosts or not
+hetzner_installimage_handle_known_hosts: False
+
+# which python interpreter to be use on the rescue system
+hetzner_installimage_rescue_python: /usr/bin/python3
 ...

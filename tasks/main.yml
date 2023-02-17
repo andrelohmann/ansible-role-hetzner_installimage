@@ -1,29 +1,49 @@
 ---
-- name: Confirm install for each host
-  pause:
-    prompt: "Really wipe all host data and install fresh OS image on host {{ item }} (y/n) ?"
-  with_items: "{{ play_hosts }}"
-  register: reset_host
-  run_once: true
-  delegate_to: localhost
 
-- name: Initialize user_confirmations variable
-  set_fact:
-    user_confirmations: {}
-  run_once: true
-  delegate_to: localhost
+- block:
+  - name: set the correct ip from the fact if ansible_host wasn't specified.
+    set_fact:
+      ssh_host_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+    delegate_to: localhost
+    when: ansible_host == 'localhost'
+  - name: set the ip to ansible_host as it was set in the inventory.
+    set_fact:
+      ssh_host_ip: "{{ ansible_host }}"
+    when: ssh_host_ip is not defined
+  - name: get known hosts file
+    shell: "ssh -G {{ ansible_host}} {{ ansible_ssh_common_args | default('') }} | grep userknownhostsfile | cut -d ' ' -f2"
+    register: hetzner_installimage_known_hosts_file_result
+    delegate_to: localhost
+  when: hetzner_installimage_handle_known_hosts | bool
 
-- name: Add user confirmation for each host
-  set_fact:
-    user_confirmations: "{{ user_confirmations | combine({item.item: item.user_input}) }}"
-  with_items: "{{ reset_host.results }}"
-  run_once: true
-  delegate_to: localhost
+- name: User confirmations
+  block:
+    - name: Confirm install for each host
+      pause:
+        prompt: "Really wipe all host data and install fresh OS image on host {{ item }} (y/n) ?"
+      with_items: "{{ play_hosts }}"
+      register: reset_host
+      run_once: true
+      delegate_to: localhost
 
-- name: Fail playbook if confirmation was not successful
-  fail:
-    msg: "installimage skipped for host {{ inventory_hostname }} "
-  when: user_confirmations[inventory_hostname] is not defined or user_confirmations[inventory_hostname] != 'y'
+    - name: Initialize user_confirmations variable
+      set_fact:
+        user_confirmations: {}
+      run_once: true
+      delegate_to: localhost
+
+    - name: Add user confirmation for each host
+      set_fact:
+        user_confirmations: "{{ user_confirmations | combine({item.item: item.user_input}) }}"
+      with_items: "{{ reset_host.results }}"
+      run_once: true
+      delegate_to: localhost
+
+    - name: Fail playbook if confirmation was not successful
+      fail:
+        msg: "installimage skipped for host {{ inventory_hostname }} "
+      when: user_confirmations[inventory_hostname] is not defined or user_confirmations[inventory_hostname] != 'y'
+  when: not (hetzner_installimage_disable_user_confirmation|bool)
 
 - name: Check existence of /etc/hostcode if possible
   block:
@@ -49,7 +69,7 @@
 
 - name: Fail playbook if image is not supposed to be installed
   fail:
-    msg: "File /etc/hostcode exists on host {{ansible_host}}. Set hetzner_installimage_ignore_hostcode=true to force installation."
+    msg: "File /etc/hostcode exists on host {{ ansible_host }}. Set hetzner_installimage_ignore_hostcode=true to force installation."
   when: not hetzner_installimage_run
 
 - name: Include rescue mode handling tasks
